@@ -4,9 +4,9 @@ clean:
 	@rm -rf shell379
 
 timer: thing.cpp
-	g++ thing.cpp -o timer
+	g++ -std=c++11 thing.cpp -o timer
 
 luke: luke.cpp
-	g++ luke.cpp -o luke
+	g++ -std=c++11 luke.cpp -o luke
 shell379: shell379.cpp
-	g++ shell379.cpp -o shell379
+	g++ -std=c++11 shell379.cpp -o shell379
