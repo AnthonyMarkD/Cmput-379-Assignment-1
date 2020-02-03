@@ -42,44 +42,44 @@ int main() {
 			arg = strtok (NULL, " \t\n");
 		}
 		args[num_tokens] = NULL;
-		if (args[0] == "exit") {
+		if (strcmp(args[0], "exit") == 0) {
 
 		} else if (strcmp(args[0], "jobs") == 0) {
 
 			checkJobs();
 		}
-		else if (args[0] == "kill") {
+		else if (strcmp(args[0], "kill") == 0) {
 			kill(stoi(args[1]), 0);
 		}
-		else if (args[0] == "resume") {
+		else if (strcmp(args[0], "resume") == 0) {
 			kill(stoi(args[1]), SIGCONT);
 		}
-		else if (args[0] == "sleep") {
+		else if (strcmp(args[0], "sleep") == 0) {
 			sleep(stoi(args[1]));
 		}
-		else if (args[0] == "suspend") {
+		else if (strcmp(args[0], "suspend") == 0) {
 			kill(stoi(args[1]), SIGSTOP);
 		}
-		else if (args[0] == "wait") {
+		else if (strcmp(args[0], "wait") == 0) {
 
-		} else if (args[0] == "") {
+		} else if (strcmp(args[0], "") == 0) {
 			// do nothing
 		} else {
-			// int status, i;
-			// pid_t newProcessPid = fork();
-			// if (newProcessPid == 0) {
-			// 	/* child process */
-			// 	execvp(args[0], args);
-			// 	cout << endl;
+			int status, i;
+			pid_t newProcessPid = fork();
+			if (newProcessPid == 0) {
+				/* child process */
+				execvp(args[0], args);
+				cout << endl;
 
-			// } else {
-			// 	/* parent process */
+			} else {
+				/* parent process */
+				
+				//wait(&status);
 
-			// 	//wait(&status);
-
-			// 	Process process = {newProcessPid, userInput};
-			// 	processTable.push_back(process);
-			// }
+				Process process = {newProcessPid, userInput};
+				processTable.push_back(process);
+			}
 		}
 	}
 
