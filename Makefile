@@ -1,7 +1,7 @@
 all: shell379
 
 clean:
-	@rm -rf shell379
+	@rm -rf shell379 luke timer
 
 timer: thing.cpp
 	g++ -std=c++11 thing.cpp -o timer
