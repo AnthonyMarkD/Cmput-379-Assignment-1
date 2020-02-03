@@ -7,7 +7,7 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-
+#include <cstring>
 using namespace std;
 const int LINE_LENGTH = 100; // Max # of charactersinan input line
 const int MAX_ARGS = 7; // Max number of arguments to a command
@@ -23,8 +23,7 @@ struct rusage ru;
 struct timeval user_time, system_time;
 vector<Process> processTable;
 char input[100];
-char arg1[] = "/bin/sh";
-char arg2[] = "-c";
+char* args[MAX_ARGS + 1];
 string userInput, first_arg, second_arg, third_arg;
 
 void checkJobs();
@@ -33,59 +32,61 @@ int main() {
 
 	while (1) {
 		cin.getline(input, sizeof(input));
-		userInput = input;
-		first_arg = userInput.substr(0, userInput.find(' '));
-		second_arg = userInput.substr(userInput.find(' ') + 1, userInput.find(' '));
+		
+		int num_tokens = 0;
+ 	
+		char * arg = strtok(input, " \t\n");
+		while (arg != NULL)
+		{
+			args[num_tokens++] = arg;
+			arg = strtok (NULL, " \t\n");
+		}
+		args[num_tokens] = NULL;
+		if (args[0] == "exit") {
 
-
-		if (first_arg == "exit") {
-
-		} else if (first_arg == "jobs") {
+		} else if (strcmp(args[0], "jobs") == 0) {
 
 			checkJobs();
 		}
-		else if (first_arg == "kill") {
-			kill(stoi(second_arg), 0);
+		else if (args[0] == "kill") {
+			kill(stoi(args[1]), 0);
 		}
-		else if (first_arg == "resume") {
+		else if (args[0] == "resume") {
+			kill(stoi(args[1]), SIGCONT);
+		}
+		else if (args[0] == "sleep") {
+			sleep(stoi(args[1]));
+		}
+		else if (args[0] == "suspend") {
+			kill(stoi(args[1]), SIGSTOP);
+		}
+		else if (args[0] == "wait") {
 
-		}
-		else if (first_arg == "sleep") {
-			sleep(stoi(second_arg));
-		}
-		else if (first_arg == "suspend") {
-
-		}
-		else if (first_arg == "wait") {
-
-		}else if (first_arg == "") {
+		} else if (args[0] == "") {
 			// do nothing
 		} else {
-			int status, i;
-			pid_t newProcessPid = fork();
-			if (newProcessPid == 0) {
-				/* child process */
+			// int status, i;
+			// pid_t newProcessPid = fork();
+			// if (newProcessPid == 0) {
+			// 	/* child process */
+			// 	execvp(args[0], args);
+			// 	cout << endl;
 
-				char *args[] = { arg1, arg2, input, NULL};
-				execvp("/bin/sh", args);
-				cout << endl;
-				
-			} else {
-				/* parent process */
+			// } else {
+			// 	/* parent process */
 
-				//wait(&status);
+			// 	//wait(&status);
 
-
-				printf("Parent done!\n");
-				Process process = {newProcessPid, userInput};
-				processTable.push_back(process);
-			}
+			// 	Process process = {newProcessPid, userInput};
+			// 	processTable.push_back(process);
+			// }
 		}
 	}
 
 }
 void checkJobs() {
 	cout << "Running processes:" << endl;
+	cout << "#    PID S SEC COMMAND" << endl;
 	int activeJobs = 0;
 	for (int i = 0; i < processTable.size(); i++) {
 		int state = kill(processTable[i].pid, 0);
@@ -106,18 +107,28 @@ void checkJobs() {
 	cout << "Completed processes:" << endl;
 	printf("User time =     %d seconds\n", activeJobs);
 	printf("Sys  time =     %d seconds\n", activeJobs);
-	
+
 
 }
 void printProcess(Process process) {
 	FILE * pfile;
 	int c;
-	char buff[100];
-	sprintf(buff,"ps -p %d -o sched=#,pid,s,cputime=SEC,command", process.pid);
+	char buff[200];
+	string pid = to_string(process.pid);
 
+	//sprintf(buff, "ps -p %d -o sched=#,pid,s,cputime=SEC,command", process.pid);
+	string args =  "ps -p " + pid + " -o sched=#,pid,s,cputime=SEC,command | awk -F'[: ]+' '/:/ {t=d$4+60*(d$5+60*d$6); printf (\"%s: %s %s   %s %s %s %s\",d$2,d$3,d$4,t,d$8,d$9,d$10)}'";
+	int n = args.length();
+
+	// declaring character array
+	char char_array[n + 1];
+
+	// copying the contents of the
+	// string to char array
+	strcpy(char_array, args.c_str());
 	// Open the pipe. The pipe's output (i.e., the results of the "sort" command
 	// will be available for reading by this program (accessible as FILE "pfile")
-	if ( ( pfile = popen(buff, "r" ) ) == NULL ) {
+	if ( ( pfile = popen(char_array, "r" ) ) == NULL ) {
 		perror( "Pipe open failure\n" );
 	} else {
 
@@ -128,9 +139,10 @@ void printProcess(Process process) {
 				break;
 			}
 		}
-		
+
 		if ( pclose( pfile ) ) {
 			perror( "Pipe close failure\n" );
 		}
 	}
+	cout << endl;
 }
