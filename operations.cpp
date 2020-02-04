@@ -20,12 +20,18 @@ void checkJobs(vector<int> *processTable) {
 	for (int i = 0; i < processTable->size(); i++) {
 		int state = kill((*processTable)[i], 0);
 		if (state == 0) {
+			//checks for state
+			//increments if service lives
+			int x = checkZombieProcess((*processTable)[i]);
+			if (x == 1) {
+				// not a zombie
+				activeJobs++;
+			} else {
+				// a zombie which was deleted
+			}
 
 
-			activeJobs++;
 
-			// print process
-			// exists
 		}
 
 	} if (activeJobs > 0) {
@@ -54,7 +60,47 @@ void checkJobs(vector<int> *processTable) {
 
 }
 
-void printProcess(int process) {
+int printProcess(int process) {
+	FILE * pfile;
+	int c;
+
+	string pid = to_string(process);
+	string output;
+	//sprintf(buff, "ps -p %d -o sched=#,pid,s,cputime=SEC,command", process.pid);
+	string args =  "ps -p " + pid + " -o sched=#,pid,s,cputime=SEC,command | awk -F'[: ]+' '/:/ {t=d$4+60*(d$5+60*d$6); printf (\"%s:   %s %s   %s %s\",d$2,d$3,d$4,t,d$8)}'";
+	int n = args.length();
+
+	// declaring character array
+	char char_array[n + 1];
+
+	// copying the contents of the
+	// string to char array
+	strcpy(char_array, args.c_str());
+	// Open the pipe. The pipe's output (i.e., the results of the "sort" command
+	// will be available for reading by this program (accessible as FILE "pfile")
+	if ( ( pfile = popen(char_array, "r" ) ) == NULL ) {
+		perror( "Pipe open failure\n" );
+	} else {
+
+		// Read the the pipe until end-of-file is reached.
+		while ( ( c = fgetc( pfile ) ) != EOF ) {
+			output += (char)c;
+		}
+
+		cout << output << endl;
+
+
+
+		if ( pclose( pfile ) ) {
+			perror( "Pipe close failure\n" );
+		}
+	}
+
+
+	cout << endl;
+	return 1;
+}
+int checkZombieProcess(int process) {
 	FILE * pfile;
 	int c;
 
@@ -84,8 +130,9 @@ void printProcess(int process) {
 		bool match = regex_search(output, pat);
 		if (match) {
 			waitpid(process, NULL, 0);
+			return 0;
 		} else {
-			cout << output << endl;
+			//cout << output << endl;
 		}
 
 
@@ -96,11 +143,12 @@ void printProcess(int process) {
 
 
 	cout << endl;
+	return 1;
 }
 void printTime() {
 	int who = RUSAGE_CHILDREN;
 	struct rusage usageStat;
-	int result = getrusage(who, &usageStat);
+	getrusage(who, &usageStat);
 	printf("User time =     %ld seconds\n", usageStat.ru_utime.tv_sec);
 	printf("Sys  time =     %ld seconds\n", usageStat.ru_stime.tv_sec);
 }

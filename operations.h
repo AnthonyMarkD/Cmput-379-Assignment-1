@@ -16,6 +16,7 @@
 #include "operations.h"
 using namespace std;
 void checkJobs(vector<int> *processTable);
-void printProcess(int process);
+int printProcess(int process);
+int checkZombieProcess(int process);
 void printTime();
 #endif
